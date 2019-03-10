@@ -20,7 +20,8 @@ def process_unfollows():
     for hook in hooks:
         logger.debug('Processing channel: {}'.format(hook.twitch_username))
         process_channel.delay(hook.pk)
-    return 'Processed {} Webhooks.'.format(len(hooks))
+        time.sleep(5)
+    return 'Started processing of {} Webhooks.'.format(len(hooks))
 
 
 @task(name='process_channel', retry_kwargs={'max_retries': 1, 'countdown': 120})
@@ -29,7 +30,6 @@ def process_channel(hook_pk):
         hook = Webhooks.objects.get(pk=hook_pk)
         logger.debug('Starting unfollow run for channel: {}'.format(hook.twitch_username))
         followers, created = Followers.objects.get_or_create(user=hook.user, twitch_username=hook.twitch_username)
-        logger.debug('created {}'.format(created))
         original_followers = json.loads(followers.followers)
         url_string = 'https://api.twitch.tv/kraken/channels/{}/follows?direction=asc&limit=100&cursor='.format(
             hook.twitch_username)
@@ -38,21 +38,21 @@ def process_channel(hook_pk):
         count = 0
         while True:
             count += 1
-            logger.debug('loop count: {}'.format(count))
             if count == 1:
                 cursor = 0
 
             url = url_string.format(cursor)
             r = requests.get(url, headers={'Client-ID': settings.TWITCH_CLIENT_ID})
-            logger.debug('r.ok: {}'.format(r.ok))
+            statsd.incr('tasks.process_channel.status_codes.{}'.format(r.status_code))
+            if not r.ok:
+                logger.warning(r.content.decode(r.encoding))
+                r.raise_for_status()
             j = r.json()
 
             if '_cursor' in j:
                 cursor = j['_cursor']
             else:
-                logger.debug('-- BREAK --')
                 break
-            logger.debug('k:_cursor {}'.format(j['_cursor']))
 
             for x in j['follows']:
                 current_followers.append(x['user']['name'])
@@ -68,11 +68,11 @@ def process_channel(hook_pk):
                 unfollow_list.append(unfollower)
 
         if unfollow_list:
-            logger.debug(unfollow_list)
             message = '{} New Unfollow(s): {}'.format(len(unfollow_list), ', '.join(unfollow_list))
             send_alert.delay(hook_pk, message)
+            logger.debug('New Unfollows for {}: {}'.format(hook.twitch_username, ', '.join(unfollow_list)))
 
-        return 'User {} has {} followers with {} new nfollowers.'.format(
+        return '{} processed {} followers with {} new unfollowers.'.format(
             hook.twitch_username, len(current_followers), len(unfollow_list))
 
     except Exception as error:
@@ -90,7 +90,7 @@ def send_alert(hook_pk, message):
         statsd.incr('tasks.send_alert.status_codes.{}'.format(r.status_code))
         if r.status_code == 404:
             logger.warning('Hook {} removed by owner {} - {}'.format(
-                hook.hook_id, hook.owner_username, hook.webhook_url))
+                hook.hook_id, hook.twitch_username, hook.webhook_url))
             hook.delete()
             statsd.incr('tasks.send_alert.hook_delete')
             return '404: Hook removed by owner and deleted from database.'
