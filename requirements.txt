@@ -1,0 +1,16 @@
+bs4
+celery
+django<3
+django-celery-beat
+django-debug-toolbar
+django-extensions
+django-statsd-mozilla
+flower
+gunicorn
+mysqlclient
+Pillow
+redis<4
+requests
+statsd
+tornado<5
+Werkzeug
