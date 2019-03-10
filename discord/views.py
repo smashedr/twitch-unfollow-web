@@ -58,7 +58,7 @@ def callback(request):
             channel_id=oauth_response['webhook']['channel_id'],
         )
         webhook.save()
-        send_discord_message.delay(oauth_response['webhook']['url'], 'Webhook successfully added.')
+        # send_discord_message.delay(oauth_response['webhook']['url'], 'Webhook successfully added.')
         statsd.incr('oauth.callback.success.')
         message(request, 'success', 'Operation Successful!')
         return redirect('home:index')

@@ -1,12 +1,13 @@
-# SMW Central ROM Archive
+# Twitch Unfollow Alerts
 
-[![build status](https://git.cssnr.com/shane/smwc-web/badges/master/build.svg)](https://git.cssnr.com/shane/smwc-web/commits/master) [![coverage report](https://git.cssnr.com/shane/smwc-web/badges/master/coverage.svg)](https://git.cssnr.com/shane/smwc-web/commits/master)
+[![build status](https://git.cssnr.com/shane/twitch-unfollow-web/badges/master/build.svg)](https://git.cssnr.com/shane/twitch-unfollow-web/commits/master) [![coverage report](https://git.cssnr.com/shane/twitch-unfollow-web/badges/master/coverage.svg)](https://git.cssnr.com/shane/twitch-unfollow-web/commits/master)
 
-This tool downloads all Super Mario World ROM's that are uploaded to www.smwcentral.net in the awaiting moderation section and archives them for download.
+This tool alerts you on Discord of unfollows on Twitch.
 
 ### Frameworks
 
 - Django (2.1.2) https://www.djangoproject.com/
+- Celery (4.2.0) http://www.celeryproject.org/
 - Bootstrap (4.1.3) http://getbootstrap.com/
 - Font Awesome (5.4.2) http://fontawesome.io/
 
@@ -17,7 +18,7 @@ This tool downloads all Super Mario World ROM's that are uploaded to www.smwcent
 To deploy this project on the development server:
 
 ```
-git clone https://git.cssnr.com/shane/smwc-web.git
+git clone https://git.cssnr.com/shane/twitch-unfollow-web.git
 cd django-twitch
 pyvenv venv
 source venv/bin/activate
@@ -37,7 +38,7 @@ python manage.py runserver 0.0.0.0:8000
 To clone a clean copy of this project int your repository:
 
 ```
-git clone https://git.cssnr.com/shane/smwc-web.git
+git clone https://git.cssnr.com/shane/twitch-unfollow-web.git
 cd django-twitch
 rm -rf .git
 git init

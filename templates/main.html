@@ -11,19 +11,19 @@
     <!-- Meta -->
     {% block meta %}
         <meta name="author" content="Shane"/>
-        <meta name="title" content="SMW Central ROM Archive"/>
-        <meta name="description" content="SMW Central ROM Archive with Super Mario World ROMs from www.smwcentral.net"/>
+        <meta name="title" content="Twitch Unfollow Alerts"/>
+        <meta name="description" content="Twitch Unfollow Alerts for Discord."/>
 
         <meta property="og:author" content="Shane">
-        <meta property="og:title" content="SMW Central ROM Archive">
-        <meta property="og:description" content="SMW Central ROM Archive with Super Mario World ROMs from www.smwcentral.net">
+        <meta property="og:title" content="Twitch Unfollow Alerts">
+        <meta property="og:description" content="Twitch Unfollow Alerts for Discord.">
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url 'home:index' %}">
         <meta property="og:image" content="{{ request.scheme }}://{{ request.META.HTTP_HOST }}{% static 'images/logo.png' %}">
         <meta property="og:image:type" content="image/png">
     {% endblock %}
 
-    <title>SMW Central ROM Archive - {% block title %}{% endblock %}</title>
+    <title>Twitch Unfollow Alerts - {% block title %}{% endblock %}</title>
 
     <!-- Media -->
     <link rel="icon" href="{% static 'images/favicon.ico' %}">
@@ -42,7 +42,7 @@
         <div class="row">
             <div class="col">
                 <nav class="navbar navbar-expand-md navbar-light bg-light mt-2">
-                    <a class="navbar-brand" href="{% url 'home:index' %}">SMWC</a>
+                    <a class="navbar-brand" href="{% url 'home:index' %}">Unfollow Alerts</a>
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-nav"
                             aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
