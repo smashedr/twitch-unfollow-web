@@ -1,0 +1,19 @@
+[Unit]
+Description=unfollow-web gunicorn django
+After=network.target
+
+[Service]
+User=apache
+Group=apache
+WorkingDirectory=/websites/unfollows-web
+ExecStart=/websites/unfollows-web/venv/bin/gunicorn twitch_unfollow.wsgi:application \
+    --workers 2 \
+    --bind 127.0.0.1:9002 \
+    --log-level info \
+    --log-file /var/log/unfollows-web/gunicorn.log
+ExecReload=/bin/kill -s HUP
+ExecStop=/bin/kill -s TERM
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

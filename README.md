@@ -13,26 +13,6 @@ This tool alerts you on Discord of unfollows on Twitch.
 
 # Development
 
-### Deployment
-
-To deploy this project on the development server:
-
-```
-git clone https://git.cssnr.com/shane/twitch-unfollow-web.git
-cd django-twitch
-pyvenv venv
-source venv/bin/activate
-python -m pip install -r requirements.txt
-cp settings.ini.example settings.ini
-python manage.py makemigrations
-python manage.py migrate
-python manage.py loaddata site-fixtures.json
-python manage.py loaddata social-fixtures.json
-python manage.py runserver 0.0.0.0:8000
-```
-
-*Note: Make sure to update the `settings.ini` with the necessary details...*
-
 ### Copying This Project
 
 To clone a clean copy of this project int your repository:

@@ -17,7 +17,7 @@ logger = logging.getLogger('app')
 
 def do_oauth(request):
     """
-    # View  /oauth/
+    # View  /discord/
     """
     request.session['state'] = ''.join(random.SystemRandom().choice(
         string.ascii_uppercase + string.digits) for _ in range(20))
@@ -37,7 +37,7 @@ def do_oauth(request):
 
 def callback(request):
     """
-    # View  /oauth/callback/
+    # View  /discord/callback/
     """
     try:
         oauth_state = request.GET['state']
@@ -51,14 +51,14 @@ def callback(request):
         logger.info(pformat(discord_profile))
         webhook = Webhooks(
             user=request.user,
-            twitch_username=discord_profile['username'],
+            twitch_username=request.user.username,
             webhook_url=oauth_response['webhook']['url'],
             hook_id=oauth_response['webhook']['id'],
             guild_id=oauth_response['webhook']['guild_id'],
             channel_id=oauth_response['webhook']['channel_id'],
         )
         webhook.save()
-        # send_discord_message.delay(oauth_response['webhook']['url'], 'Webhook successfully added.')
+        send_discord_message.delay(oauth_response['webhook']['url'], 'Webhook successfully added.')
         statsd.incr('oauth.callback.success.')
         message(request, 'success', 'Operation Successful!')
         return redirect('home:index')
