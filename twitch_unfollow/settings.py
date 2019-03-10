@@ -141,12 +141,12 @@ LOGGING = {
             'level': CONFIG['logging']['app_level'],
             'propagate': True,
         },
-        # 'celery': {
-        #     'handlers': [CONFIG['logging']['app_handler']],
-        #     'level': [CONFIG['logging']['app_handler']],
-        #     'filename': 'celery.log',
-        #     'formatter': 'simple',
-        # },
+        'celery': {
+            'handlers': [CONFIG['logging']['app_handler']],
+            'level': CONFIG['logging']['app_level'],
+            'filename': 'celery.log',
+            'formatter': 'simple',
+        },
     },
 }
 

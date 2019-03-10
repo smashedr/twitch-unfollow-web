@@ -1,6 +1,8 @@
 from __future__ import absolute_import, unicode_literals
+import json
 import logging
 import requests
+import time
 import urllib3
 from django_statsd.clients import statsd
 from django.conf import settings
@@ -13,11 +15,70 @@ urllib3.disable_warnings()
 
 @task(name='process_unfollows')
 def process_unfollows():
-    logger.info('process_hacks: executed')
+    logger.debug('process_hacks: executed')
     hooks = Webhooks.objects.all()
     for hook in hooks:
-        logger.info('Processing channel: {}'.format(hook.twitch_username))
+        logger.debug('Processing channel: {}'.format(hook.twitch_username))
+        process_channel.delay(hook.pk)
     return 'Processed {} Webhooks.'.format(len(hooks))
+
+
+@task(name='process_channel', retry_kwargs={'max_retries': 1, 'countdown': 120})
+def process_channel(hook_pk):
+    try:
+        hook = Webhooks.objects.get(pk=hook_pk)
+        logger.debug('Starting unfollow run for channel: {}'.format(hook.twitch_username))
+        followers, created = Followers.objects.get_or_create(user=hook.user, twitch_username=hook.twitch_username)
+        logger.debug('created {}'.format(created))
+        original_followers = json.loads(followers.followers)
+        url_string = 'https://api.twitch.tv/kraken/channels/{}/follows?direction=asc&limit=100&cursor='.format(
+            hook.twitch_username)
+        url_string += '{}'
+        current_followers = []
+        count = 0
+        while True:
+            count += 1
+            logger.debug('loop count: {}'.format(count))
+            if count == 1:
+                cursor = 0
+
+            url = url_string.format(cursor)
+            r = requests.get(url, headers={'Client-ID': settings.TWITCH_CLIENT_ID})
+            logger.debug('r.ok: {}'.format(r.ok))
+            j = r.json()
+
+            if '_cursor' in j:
+                cursor = j['_cursor']
+            else:
+                logger.debug('-- BREAK --')
+                break
+            logger.debug('k:_cursor {}'.format(j['_cursor']))
+
+            for x in j['follows']:
+                current_followers.append(x['user']['name'])
+
+            time.sleep(5)
+
+        followers.followers = json.dumps(current_followers)
+        followers.save()
+
+        unfollow_list = []
+        for unfollower in original_followers:
+            if unfollower not in current_followers:
+                unfollow_list.append(unfollower)
+
+        if unfollow_list:
+            logger.debug(unfollow_list)
+            message = '{} New Unfollow(s): {}'.format(len(unfollow_list), ', '.join(unfollow_list))
+            send_alert.delay(hook_pk, message)
+
+        return 'User {} has {} followers with {} new nfollowers.'.format(
+            hook.twitch_username, len(current_followers), len(unfollow_list))
+
+    except Exception as error:
+        statsd.incr('tasks.process_channel.errors')
+        logger.exception(error)
+        raise
 
 
 @task(name='send_alert', retry_kwargs={'max_retries': 5, 'countdown': 120})

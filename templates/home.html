@@ -11,23 +11,32 @@
         <div class="col">
             <h1>Twitch Unfollow Alerts</h1>
             {% if not request.user.is_authenticated %}
+
                 <p class="lead">Log in with Twitch to get started.</p>
                 <p>
                     <a href="{% url 'oauth:login' %}" class="btn btn-info btn-lg my-2" role="button">Connect with Twitch
                         <i class="fas fa-sign-in-alt"></i></a>
                 </p>
+
             {% else %}
+
                 {% if not webhook %}
-                    <p class="lead">Add unfollow alerts to a private Discord channel.</p>
-                    <p>
-                        <a href="{% url 'discord:login' %}" class="btn btn-info btn-lg my-2" role="button">Add Notifications to Discord
-                            <i class="fab fa-discord"></i></a>
-                    </p>
+                    {% if user.profile.email_verified %}
+                        <p class="lead">Add unfollow alerts to a private Discord channel.</p>
+                        <p>
+                            <a href="{% url 'discord:login' %}" class="btn btn-info btn-lg my-2" role="button">Add Notifications to Discord
+                                <i class="fab fa-discord"></i></a>
+                        </p>
+                    {% else %}
+                        <p class="lead">Your account is not eligible for this service at this time.</p>
+                    {% endif %}
                 {% else %}
-                    <p class="lead">You have already added a webhook for your channel to discord.</p>
-                    <p>You can only have 1 unfollow alert active at one time as of now.
-                        You will need to delete the current webhook before you can add another.</p>
+                    <p class="lead">You have already added a webhook for your channel to discord.
+                        You can only have 1 unfollow alert active at one time as of now.</p>
+                    <p>You will need to delete the current webhook before you can add another.
+                        The ability to manage/remove hooks is not yet available.</p>
                 {% endif %}
+
             {% endif %}
         </div>
     </div>
