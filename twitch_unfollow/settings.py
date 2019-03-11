@@ -53,9 +53,9 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = CONFIG['django']['time_zone']
 CELERY_BEAT_SCHEDULE = {
-    'every-fifteen-minutes': {
+    'every-hour': {
         'task': 'process_unfollows',
-        'schedule': crontab('*/15'),
+        'schedule': crontab('0'),
     },
 }
 
@@ -142,10 +142,9 @@ LOGGING = {
             'propagate': True,
         },
         'celery': {
-            'handlers': [CONFIG['logging']['app_handler']],
-            'level': CONFIG['logging']['app_level'],
-            'filename': 'celery.log',
-            'formatter': 'simple',
+            'handlers': [CONFIG['logging']['celery_handler']],
+            'level': CONFIG['logging']['celery_level'],
+            'propagate': True,
         },
     },
 }

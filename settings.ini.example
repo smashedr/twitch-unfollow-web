@@ -8,12 +8,13 @@ static_root     = /data/unfollows-web/static
 media_root      = /data/unfollows-web/media
 sqlite_db       = db.sqlite3
 
-[logging]
 app_level       = DEBUG
-app_handler     = console
+app_handler     = file
 django_level    = INFO
-django_handler  = console
-log_file        = django.log
+django_handler  = file
+celery_level    = INFO
+celery_handler  = file
+log_file        = /var/log/unfollows-web/django.log
 
 [database]
 name            = database

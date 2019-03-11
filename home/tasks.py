@@ -15,20 +15,19 @@ urllib3.disable_warnings()
 
 @task(name='process_unfollows')
 def process_unfollows():
-    logger.debug('process_hacks: executed')
     hooks = Webhooks.objects.all()
     for hook in hooks:
-        logger.debug('Processing channel: {}'.format(hook.twitch_username))
+        logger.debug('Starting process_channel for: {}'.format(hook.twitch_username))
         process_channel.delay(hook.pk)
-        time.sleep(5)
-    return 'Started processing of {} Webhooks.'.format(len(hooks))
+        time.sleep(30)
+    return 'Finished processing {} Webhooks.'.format(len(hooks))
 
 
 @task(name='process_channel', retry_kwargs={'max_retries': 1, 'countdown': 120})
 def process_channel(hook_pk):
     try:
         hook = Webhooks.objects.get(pk=hook_pk)
-        logger.debug('Starting unfollow run for channel: {}'.format(hook.twitch_username))
+        logger.info('Starting unfollow run for channel: {}'.format(hook.twitch_username))
         followers, created = Followers.objects.get_or_create(user=hook.user, twitch_username=hook.twitch_username)
         original_followers = json.loads(followers.followers)
         url_string = 'https://api.twitch.tv/kraken/channels/{}/follows?direction=asc&limit=100&cursor='.format(
@@ -70,7 +69,7 @@ def process_channel(hook_pk):
         if unfollow_list:
             message = '{} New Unfollow(s): {}'.format(len(unfollow_list), ', '.join(unfollow_list))
             send_alert.delay(hook_pk, message)
-            logger.debug('New Unfollows for {}: {}'.format(hook.twitch_username, ', '.join(unfollow_list)))
+            logger.info('New Unfollows for {}: {}'.format(hook.twitch_username, ', '.join(unfollow_list)))
 
         return '{} processed {} followers with {} new unfollowers.'.format(
             hook.twitch_username, len(current_followers), len(unfollow_list))
