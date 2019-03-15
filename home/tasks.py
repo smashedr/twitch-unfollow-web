@@ -66,10 +66,13 @@ def process_channel(hook_pk):
             if unfollower not in current_followers:
                 unfollow_list.append(unfollower)
 
+        # change to loop to trigger new function: process_unfollowed_user
         if unfollow_list:
+            logger.info('New Unfollows for {}: {}'.format(hook.twitch_username, ', '.join(unfollow_list)))
+            for unfollower in unfollow_list:
+                process_unfollowed_user.delay(hook_pk, unfollower)
             message = '{} New Unfollow(s): {}'.format(len(unfollow_list), ', '.join(unfollow_list))
             send_alert.delay(hook_pk, message)
-            logger.info('New Unfollows for {}: {}'.format(hook.twitch_username, ', '.join(unfollow_list)))
 
         return '{} processed {} followers with {} new unfollowers.'.format(
             hook.twitch_username, len(current_followers), len(unfollow_list))
@@ -78,6 +81,36 @@ def process_channel(hook_pk):
         statsd.incr('tasks.process_channel.errors')
         logger.exception(error)
         raise
+
+
+@task(name='process_unfollowed_user', retry_kwargs={'max_retries': 5, 'countdown': 120})
+def process_unfollowed_user(hook_pk, username):
+    # hook = Webhooks.objects.get(pk=hook_pk)
+    url = 'https://api.twitch.tv/kraken/users?login={}'.format(username)
+    r = requests.get(url, headers={'Accept': 'application/vnd.twitchtv.v5+json'}, timeout=30)
+    if not r.ok:
+        logger.warning(r.content.decode(r.encoding))
+        r.raise_for_status()
+
+    data = r.json()
+    if not data['users']:
+        # users was deleted or renamed
+        message = 'Renamed or Deleted Account: {0}\n<https://www.twitch.tv/{0}>'.format(username.lower())
+        send_alert.delay(hook_pk, message)
+        return 'Unfollower Changed/Deleted: {}'.format(username)
+
+    url = 'https://api.twitch.tv/kraken/channels/{}'.format(data['users'][0]['_id'])
+    r = requests.get(url, headers={'Accept': 'application/vnd.twitchtv.v5+json'}, timeout=30)
+    if not r.ok:
+        logger.error(r.content.decode(r.encoding))
+        r.raise_for_status()
+
+    data = r.json()
+    account_type = data['broadcaster_type'] if data['broadcaster_type'] else 'no'
+    message = 'New Unfollower: {0}\nPartner/Affiliate: {1}\nViews/Follows: {2}/{3}\n<{4}>'.format(
+        data['display_name'], account_type, data['views'], data['followers'], data['url'])
+    send_alert.delay(hook_pk, message)
+    return 'Unfollower Processed: {}.'.format(username)
 
 
 @task(name='send_alert', retry_kwargs={'max_retries': 5, 'countdown': 120})
