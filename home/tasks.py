@@ -94,9 +94,10 @@ def process_unfollowed_user(hook_pk, username):
     data = r.json()
     if not data['users']:
         # users was deleted or renamed
-        message = ':grey_question: Renamed/Deleted Follower: `{0}`\n<https://www.twitch.tv/{0}>'.format(username.lower())
+        message = ':grey_question: Suspended/Renamed Follower: `{0}`\n<https://www.twitch.tv/{0}>'.format(
+            username.lower())
         send_alert.delay(hook_pk, message)
-        return 'Unfollower Changed/Deleted: {}'.format(username)
+        return 'Unfollower Suspended/Renamed: {}'.format(username)
 
     url = 'https://api.twitch.tv/kraken/channels/{}'.format(data['users'][0]['_id'])
     headers = {'Accept': 'application/vnd.twitchtv.v5+json', 'Client-ID': settings.TWITCH_CLIENT_ID}
