@@ -95,7 +95,7 @@ def process_unfollowed_user(hook_pk, username):
     if not data['users']:
         # users was deleted or renamed
         cmdroot = 'https://twitch-tools.rootonline.de/username_changelogs_search.php?q={}'.format(username.lower())
-        message = ':grey_question: Suspended/Renamed Follower: `{0}`\n<https://www.twitch.tv/{0}>\n{1}'.format(
+        message = ':grey_question: Suspended/Renamed Follower: `{0}`\n<https://www.twitch.tv/{0}>\n<{1}>'.format(
             username.lower(), cmdroot)
         send_alert.delay(hook_pk, message)
         return 'Unfollower Suspended/Renamed: {}'.format(username)
